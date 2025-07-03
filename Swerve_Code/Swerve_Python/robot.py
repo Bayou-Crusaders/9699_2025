@@ -9,6 +9,10 @@ import wpilib
 import commands2
 import typing
 
+# Import the TalonFX class from the ctre module, which is used for controlling Talon FX motor controllers.
+import phoenix6
+
+# Import the RobotContainer class, which contains the robot's subsystems, commands, and button bindings.
 from robotcontainer import RobotContainer
 
 
@@ -18,6 +22,16 @@ class MyRobot(commands2.TimedCommandRobot):
     has an implementation of robotPeriodic which runs the scheduler for you
     """
 
+    global FRR
+    global FLR
+    global BLR
+    global BRR
+    
+    FRR = phoenix6.hardware.talon_fx.TalonFX(1, 'rio')
+    FLR = phoenix6.hardware.talon_fx.TalonFX(3, 'rio')
+    BLR = phoenix6.hardware.talon_fx.TalonFX(5, 'rio')
+    BRR = phoenix6.hardware.talon_fx.TalonFX(7, 'rio')
+
     autonomousCommand: typing.Optional[commands2.Command] = None
 
     def robotInit(self) -> None:
@@ -26,8 +40,12 @@ class MyRobot(commands2.TimedCommandRobot):
         initialization code.
         """
 
-        TalonFX.setNeutralMode(1)
-
+        # Set the brake mode for the TalonFX motor controllers to brake mode.
+        FRR.setNeutralMode(0)
+        FLR.setNeutralMode(0)
+        BLR.setNeutralMode(0)
+        BRR.setNeutralMode(0)
+        
         # Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         # autonomous chooser on the dashboard.
         self.container = RobotContainer()
@@ -71,6 +89,11 @@ class MyRobot(commands2.TimedCommandRobot):
         # this line or comment it out.
         if self.autonomousCommand:
             self.autonomousCommand.cancel()
+
+        FRR.setNeutralMode(1)
+        FLR.setNeutralMode(1)
+        BLR.setNeutralMode(1)
+        BRR.setNeutralMode(1)
 
     def teleopPeriodic(self) -> None:
         """This function is called periodically during operator control"""
