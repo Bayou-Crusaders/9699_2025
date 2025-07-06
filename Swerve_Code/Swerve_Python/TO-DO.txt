@@ -1,1 +1,1 @@
-In RobotInit, set all rotate motors to coast. In TeleopInit, set all rotate motors to brake. Make sure control is using joystick.
+
