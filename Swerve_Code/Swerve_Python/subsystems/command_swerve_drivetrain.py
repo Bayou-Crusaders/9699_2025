@@ -6,6 +6,9 @@ from typing import Callable, overload
 from wpilib import DriverStation, Notifier, RobotController
 from wpilib.sysid import SysIdRoutineLog
 from wpimath.geometry import Pose2d, Rotation2d
+from wpimath.controller import HolonomicDriveController, PIDController
+from wpimath.kinematics import ChassisSpeeds
+from pathplannerlib import PathPlannerTrajectory
 
 
 class CommandSwerveDrivetrain(Subsystem, swerve.SwerveDrivetrain):
@@ -318,3 +321,42 @@ class CommandSwerveDrivetrain(Subsystem, swerve.SwerveDrivetrain):
         :type vision_measurement_std_devs:  tuple[float, float, float] | None
         """
         swerve.SwerveDrivetrain.add_vision_measurement(self, vision_robot_pose, utils.fpga_to_current_time(timestamp), vision_measurement_std_devs)
+
+    def followTrajectoryCommand(self, trajectory: PathPlannerTrajectory, isFirstPath: bool) -> Command:
+        """
+        Generates a command to follow a given PathPlanner trajectory.
+
+        :param trajectory: The PathPlanner trajectory to follow
+        :param isFirstPath: Whether this is the first path in the sequence
+        :return: A command to follow the trajectory
+        """
+        # Reset odometry at the start of the path if it's the first path
+        if isFirstPath:
+            initialPose = trajectory.getInitialHolonomicPose()
+            self.resetOdometry(initialPose)
+
+        # Create PID controllers for X, Y, and rotation
+        xController = PIDController(1.0, 0.0, 0.0)  # Tune these values
+        yController = PIDController(1.0, 0.0, 0.0)  # Tune these values
+        thetaController = PIDController(1.0, 0.0, 0.0)  # Tune these values
+        thetaController.enableContinuousInput(-math.pi, math.pi)
+
+        # Create a HolonomicDriveController
+        holonomicController = HolonomicDriveController(xController, yController, thetaController)
+
+        # Define a command to follow the trajectory
+        def trajectoryFollower():
+            currentPose = self.getPose()
+            desiredState = trajectory.sample(self.getTime())
+            targetChassisSpeeds = holonomicController.calculate(
+                currentPose,
+                desiredState.pose,
+                desiredState.velocity,
+                desiredState.holonomicRotation
+            )
+            self.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
+                targetChassisSpeeds.vx, targetChassisSpeeds.vy, targetChassisSpeeds.omega, currentPose.rotation
+            ))
+
+        # Return a command that runs the trajectory follower
+        return Command(trajectoryFollower, [self])

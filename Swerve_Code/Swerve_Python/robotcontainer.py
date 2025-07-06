@@ -16,6 +16,8 @@ from phoenix6 import swerve
 from wpimath.geometry import Rotation2d
 from wpimath.units import rotationsToRadians
 
+from pathplannerlib import PathPlanner
+
 
 class RobotContainer:
     """
