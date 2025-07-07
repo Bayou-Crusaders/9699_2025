@@ -122,4 +122,15 @@ class RobotContainer:
 
         :returns: the command to run in autonomous
         """
-        return commands2.cmd.print_("No autonomous command configured")
+        # Load the PathPlanner trajectory
+        trajectory = PathPlanner.loadPath(
+            "New Auto", 
+            maxVel = self._max_speed,
+            maxAccel = self._max_speed / 2
+            )
+        
+        # Generate the command to follow the trajectory
+        autoCommand = self.drivetrain.followTrajectoryCommand(trajectory, isFirstPath=True)
+
+        # Return the command
+        return autoCommand
