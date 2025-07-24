@@ -83,6 +83,7 @@ class Telemetry:
         self._drive_module_positions.set(state.module_positions)
         self._drive_timestamp.set(state.timestamp)
         self._drive_odometry_frequency.set(1.0 / state.odometry_period)
+        self.swerve_module_rotation = ()
 
         # Also write to log file
         pose_array = [state.pose.x, state.pose.y, state.pose.rotation().degrees()]
